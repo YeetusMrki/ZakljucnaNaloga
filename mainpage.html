@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>MrkiSweeper</title>
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    
+    <body>
+        <!-- Zgornje območje glave -->
+        <header class="header">
+            <div class="header-container">
+                <img class="logo" src="photos/logo.svg" alt="Site Logo">
+                <img class="profile-pic clickable" src="photos/default_pfp.png" alt="Profile Picture" onclick="window.location.href='profile.html'">
+            </div>
+        </header>
+
+        <!-- TODO: prikaži podatke lestvice od poizvedbe Oracle DB za trenutnega uporabnika -->
+        <!-- Glavno vsebinsko okno, kjer se prikažejo razdelek lestvice ali igranja -->
+        <main class="main-content">
+            <div id="background-animation" class="background-animation"></div>
+            <div class="content-wrapper">
+                <div id="leaderboard-section" class="content-section leaderboard-section">
+                    <h2>Leaderboard</h2>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Time (s)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody">
+                            <!-- dynamic rows inserted by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="play-section" class="content-section play-section">
+                    <h2>Ready to Play?</h2>
+                    <button class="play-btn" onclick="window.location.href='minesweeper.html'">PLAY</button>
+                </div>
+            </div>
+        </main>
+        
+        <script src="js/config.js"></script>
+        <script src="js/auth.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>
+

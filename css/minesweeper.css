@@ -1,0 +1,175 @@
+.game-container {
+    display: block;
+    text-align: center;
+    padding: 1rem;
+    overflow: auto;
+}
+
+.game-container h1 {
+    color: #e0e0e0;
+    margin-bottom: 1rem;
+}
+
+.minesweeper-board {
+    display: inline-grid;
+    grid-template-columns: repeat(30, 20px);
+    gap: 1px;
+    background-color: #404040;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.minesweeper-cell {
+    width: 20px;
+    height: 20px;
+    background-color: #2d2d2d;
+    border: 1px solid #505050;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: #a0a0a0;
+    transition: background-color 0.2s ease;
+    user-select: none;
+}
+
+.minesweeper-cell:hover {
+    background-color: #3a3a3a;
+}
+
+.minesweeper-cell.revealed {
+    background-color: #1a1a1a;
+    border-color: #404040;
+}
+
+.minesweeper-cell.mine {
+    background-color: #5a2a2a;
+}
+
+.timer {
+    font-size: 2rem;
+    color: #e0e0e0;
+    margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+.endgame-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.endgame-modal.hidden {
+    display: none;
+}
+
+.endgame-content {
+    background: #1a1a1a;
+    border: 2px solid #404040;
+    padding: 1.5rem;
+    border-radius: 10px;
+    width: min(90%, 420px);
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+
+.endgame-content h2 {
+    margin-bottom: 0.5rem;
+    color: #e0e0e0;
+}
+
+.endgame-content p {
+    margin-bottom: 1rem;
+    color: #c0c0c0;
+}
+
+.endgame-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.endgame-actions button {
+    background: linear-gradient(135deg, #404040 0%, #505050 100%);
+    border: 1px solid #606060;
+    color: white;
+    padding: 0.65rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    min-width: 140px;
+}
+
+.endgame-actions button:hover {
+    background: linear-gradient(135deg, #505050 0%, #606060 100%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .minesweeper-board {
+        grid-template-columns: repeat(20, 15px);
+    }
+
+    .minesweeper-cell {
+        width: 15px;
+        height: 15px;
+        font-size: 0.6rem;
+    }
+
+    .timer {
+        font-size: 1.5rem;
+    }
+
+    .endgame-content {
+        padding: 1rem;
+        width: min(95%, 350px);
+    }
+
+    .endgame-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .endgame-actions button {
+        min-width: 120px;
+        padding: 0.5rem 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .minesweeper-board {
+        grid-template-columns: repeat(15, 12px);
+        padding: 5px;
+    }
+
+    .minesweeper-cell {
+        width: 12px;
+        height: 12px;
+        font-size: 0.5rem;
+    }
+
+    .timer {
+        font-size: 1.2rem;
+    }
+
+    .game-container {
+        padding: 0.5rem;
+    }
+
+    .game-container h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+}</content>
+<parameter name="filePath">c:\Users\Amel\Desktop\ZakljucnaNaloga-main\css\minesweeper.css

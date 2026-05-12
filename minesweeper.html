@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MrkiSweeper</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/minesweeper.css">
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/minesweeper.js"></script>
+</head>
+<body>
+    <!-- Igralno območje in timer -->
+    <div id="game-container" class="game-container">
+        <h1>Minesweeper</h1>
+        <div class="timer">Time: <span id="timer">000</span>s</div>
+        <div id="minesweeper-board" class="minesweeper-board"></div>
+    </div>
+
+    <!-- win/lose message -->
+    <div id="endgame-modal" class="endgame-modal hidden">
+        <div class="endgame-content">
+            <h2 id="endgame-title">Game Result</h2>
+            <p id="endgame-message">Outcome message</p>
+            <div class="endgame-actions">
+                <button id="quit-save-btn" type="button">Quit and Save Score</button>
+                <button id="retry-save-btn" type="button">Try Again and Save Score</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

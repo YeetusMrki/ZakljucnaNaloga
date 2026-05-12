@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>MrkiSweeper - Profile</title>
+        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="css/profile.css">
+    </head>
+    
+    <body>
+        <!-- Glava -->
+        <header class="header">
+            <div class="header-container">
+                <img class="logo clickable" src="photos/logo.svg" alt="Site Logo" onclick="window.location.href='mainpage.html'">
+                <img class="profile-pic clickable" src="photos/default_pfp.png" alt="Profile Picture" onclick="window.location.href='profile.html'">
+            </div>
+        </header>
+
+        <!-- Glavno okno -->
+        <main class="main-content profile-main-content">
+            <div id="profile-section" class="content-section profile-content-section">
+                <div class="profile-card profile-card-full">
+                    <div class="profile-layout">
+                        <div class="profile-picture-section">
+                            <img class="profile-avatar-rect" id="profileAvatar" src="photos/default_pfp.png" alt="Profile Picture">
+                            <label for="avatarUpload" class="avatar-upload-btn">Change Picture</label>
+                            <button class="avatar-upload-btn edit-account-btn" id="editAccountBtn" type="button">Change Account Info</button>
+                            <input type="file" id="avatarUpload" accept="image/*" class="hidden-input">
+                        </div>
+                        <div class="profile-info-section">
+                            <h3 id="profileUsername">Username</h3>
+                            <input id="profileUsernameInput" class="profile-input hidden-input" type="text" placeholder="Username">
+                            <div class="profile-details">
+                                <div class="profile-field">
+                                    <label>Email</label>
+                                    <div class="profile-field-value">
+                                        <span id="profileEmail">-</span>
+                                        <input id="profileEmailInput" class="profile-input hidden-input" type="email" placeholder="Email">
+                                    </div>
+                                </div>
+                                <div class="profile-field">
+                                    <label>Date of Birth</label>
+                                    <span id="profileDob">-</span>
+                                </div>
+                                <div class="profile-field">
+                                    <label>Password</label>
+                                    <div class="profile-field-value">
+                                        <span id="profilePasswordMask">********</span>
+                                        <input id="profilePasswordInput" class="profile-input hidden-input" type="password" placeholder="New password">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="play-btn" onclick="clearCurrentUser(); window.location.href='index.html'">LOG OUT</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script src="js/config.js"></script>
+        <script src="js/auth.js"></script>
+        <script src="js/profile.js"></script>
+    </body>
+</html>
