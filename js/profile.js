@@ -1,180 +1,356 @@
-// Get current logged in user from sessionStorage
-let currentUser = getCurrentUser();
-let currentUserData = null;
+let isEditing = false;
 
-// Require authentication - redirect to login if not logged in
-requireAuth();
-
-function setProfileInfo(user) {
-    document.getElementById('profileUsername').textContent = user.username;
-    document.getElementById('profileEmail').textContent = user.email;
-    document.getElementById('profileDob').textContent = user.dob || user.birthDate || '-';
-    document.getElementById('profileUsernameInput').value = user.username;
-    document.getElementById('profileEmailInput').value = user.email;
-    document.getElementById('profilePasswordInput').value = '';
-
-    if (user.avatar) {
-        document.getElementById('profileAvatar').src = user.avatar;
-    }
-}
-
-function toggleAccountEdit() {
-    const editButton = document.getElementById('editAccountBtn');
-    const isEditing = editButton.dataset.editing === 'true';
-    const usernameInput = document.getElementById('profileUsernameInput');
-    const emailInput = document.getElementById('profileEmailInput');
-    const passwordInput = document.getElementById('profilePasswordInput');
-    const usernameSpan = document.getElementById('profileUsername');
-    const emailSpan = document.getElementById('profileEmail');
-    const passwordMask = document.getElementById('profilePasswordMask');
-
-    if (!isEditing) {
-        editButton.textContent = 'Save Account Info';
-        editButton.dataset.editing = 'true';
-        usernameSpan.style.display = 'none';
-        emailSpan.style.display = 'none';
-        passwordMask.style.display = 'none';
-        usernameInput.classList.remove('hidden-input');
-        emailInput.classList.remove('hidden-input');
-        passwordInput.classList.remove('hidden-input');
-        passwordInput.value = '';
-        usernameInput.focus();
-    } else {
-        const newUsername = usernameInput.value.trim();
-        const newEmail = emailInput.value.trim();
-        const newPassword = passwordInput.value;
-
-        if (!newUsername) {
-            alert('Username cannot be empty.');
-            usernameInput.focus();
-            return;
-        }
-
-        if (!newEmail) {
-            alert('Email cannot be empty.');
-            emailInput.focus();
-            return;
-        }
-
-        // Call API to update profile
-        updateProfileViaAPI(newUsername, newEmail, newPassword);
-    }
-}
-
-async function updateProfileViaAPI(newUsername, newEmail, newPassword) {
+function getLocalProfile() {
     try {
-        const updates = {
-            username: newUsername,
-            email: newEmail
-        };
-
-        if (newPassword) {
-            updates.password = newPassword;
-        }
-
-        const response = await fetch(`${API_ENDPOINTS.profile}/${currentUser}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getUserToken()}`
-            },
-            body: JSON.stringify(updates)
-        });
-
-        if (response.status === 200) {
-            const updatedUser = await response.json();
-            currentUser = newUsername;
-            currentUserData = updatedUser;
-            setCurrentUser(newUsername, getUserToken());
-            setProfileInfo(updatedUser);
-
-            const editButton = document.getElementById('editAccountBtn');
-            editButton.textContent = 'Change Account Info';
-            editButton.dataset.editing = 'false';
-            document.getElementById('profileUsername').style.display = 'block';
-            document.getElementById('profileEmail').style.display = 'block';
-            document.getElementById('profilePasswordMask').style.display = 'block';
-            document.getElementById('profileUsernameInput').classList.add('hidden-input');
-            document.getElementById('profileEmailInput').classList.add('hidden-input');
-            document.getElementById('profilePasswordInput').classList.add('hidden-input');
-
-            alert('Profile updated successfully!');
-        } else if (response.status === 409) {
-            alert('Username or email already taken. Please choose another.');
-        } else {
-            const errorData = await response.json().catch(() => ({}));
-            alert(errorData.message || 'Failed to update profile.');
-        }
-    } catch (err) {
-        console.error('Profile update error:', err);
-        alert('Cannot connect to server. Is the API running?');
+        return JSON.parse(localStorage.getItem('localProfile') || '{}');
+    } catch (e) {
+        return {};
     }
 }
 
-// Load user profile on page init
-if (!currentUser) {
-    window.location.href = 'index.html';
-} else {
-    // Try to fetch from API first, fallback to sessionStorage
-    try {
-        fetchUserProfile(currentUser).then(user => {
-            currentUserData = user;
-            setProfileInfo(user);
-        }).catch(err => {
-            console.warn('Could not fetch from API, using session data:', err);
-            // Fallback: Create basic user object from session data
-            currentUserData = {
-                username: currentUser,
-                email: 'user@example.com',
-                dob: '-'
-            };
-            setProfileInfo(currentUserData);
-        });
-    } catch (err) {
-        console.error('Error loading profile:', err);
+function saveLocalProfile(profile) {
+    localStorage.setItem('localProfile', JSON.stringify(profile));
+}
+
+function applyProfileToUI(profile) {
+    const username = profile.username || '';
+    const email = profile.email || '';
+    const dob = profile.dob || '-';
+
+    document.getElementById('profileUsername').textContent = username;
+    document.getElementById('profileEmail').textContent = email;
+    document.getElementById('profileDob').textContent = dob;
+    document.getElementById('profileUsernameInput').value = username;
+    document.getElementById('profileEmailInput').value = email;
+
+    if (profile.pfp) {
+        updateGlobalProfilePics(profile.pfp);
+        sessionStorage.setItem('userPfp', profile.pfp);
     }
 }
 
-// Handle avatar upload
-document.getElementById('avatarUpload').addEventListener('change', async function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const avatarData = e.target.result;
-            
-            try {
-                // Upload avatar to API
-                const response = await fetch(`${API_ENDPOINTS.profile}/${currentUser}/avatar`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${getUserToken()}`
-                    },
-                    body: JSON.stringify({ avatar: avatarData })
-                });
+document.addEventListener('DOMContentLoaded', () => {
+    const user = getCurrentUser();
+    const userId = getUserId();
+    if (!user || !userId) return;
 
-                if (response.status === 200) {
-                    const updatedUser = await response.json();
-                    currentUserData = updatedUser;
-                    document.getElementById('profileAvatar').src = avatarData;
-                } else {
-                    // Fallback: store locally
-                    if (currentUserData) {
-                        currentUserData.avatar = avatarData;
-                    }
-                    document.getElementById('profileAvatar').src = avatarData;
-                }
-            } catch (err) {
-                console.warn('Could not upload to API, storing locally:', err);
-                if (currentUserData) {
-                    currentUserData.avatar = avatarData;
-                }
-                document.getElementById('profileAvatar').src = avatarData;
-            }
-        };
-        reader.readAsDataURL(file);
-    }
+    fetchUserProfile(userId);
+    setupProfileListeners();
 });
 
-document.getElementById('editAccountBtn').addEventListener('click', toggleAccountEdit);
+function setupProfileListeners() {
+    const editBtn = document.getElementById('editAccountBtn');
+    if (editBtn) {
+        editBtn.addEventListener('click', toggleEditMode);
+    }
+
+    const avatarUpload = document.getElementById('avatarUpload');
+    if (avatarUpload) {
+        avatarUpload.addEventListener('change', handleAvatarUpload);
+    }
+}
+
+async function fetchUserProfile(userId) {
+    try {
+        // Try a few common variants of the profile GET endpoint
+        const token = getUserToken();
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const tryUrls = [
+            `${API_ENDPOINTS.profile}/${userId}`,
+            `${API_ENDPOINTS.profile}?id=${encodeURIComponent(userId)}`,
+            `${API_ENDPOINTS.profile}`
+        ];
+
+        let response;
+        let result;
+        for (const url of tryUrls) {
+            try {
+                response = await fetch(url, { headers });
+                if (!response.ok) continue;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    result = await response.text().catch(() => null);
+                }
+                break;
+            } catch (e) {
+                console.warn('Profile fetch attempt failed for', url, e);
+                continue;
+            }
+        }
+
+        const localProfile = getLocalProfile();
+
+        if (typeof result === 'undefined' || result === null) {
+            if (localProfile && (localProfile.username || localProfile.email || localProfile.pfp)) {
+                result = localProfile;
+            } else {
+                throw new Error('Failed to fetch user profile from any endpoint');
+            }
+        }
+
+        // If the API returns a list (common in Oracle ORDS), take the first item
+        let userData = Array.isArray(result) ? result[0] : (result.items ? result.items[0] : (result.data || result));
+        
+        console.log("Extracted User Object:");
+        console.table(userData); 
+
+        if (!userData) throw new Error("User data not found in response");
+        
+        // Robust field mapping for Oracle/REST variations
+        const username = userData.username || userData.USERNAME || userData.USER_NAME || userData.USER_ID || userData.ID || '';
+        const email = userData.email || userData.EMAIL || userData.user_email || userData.USER_EMAIL || userData.MAIL || userData.E_MAIL || userData.POSTA || '';
+        const dobRaw = userData.dob || userData.DOB || userData.birthDate || userData.BIRTHDATE || userData.birth_date || userData.BIRTH_DATE || userData.DATUM_ROJSTVA || userData.BIRTH_DAY || '';
+        const pfp = userData.profile_pic || userData.PROFILE_PIC || '';
+        const fetchedProfile = {
+            userId,
+            username,
+            email,
+            dob: dobRaw,
+            pfp,
+            updatedAt: Date.now()
+        };
+
+        // Handle Date formatting safely
+        let formattedDob = '-';
+        if (dobRaw) {
+            const dateObj = new Date(dobRaw);
+            formattedDob = isNaN(dateObj.getTime()) ? dobRaw : dateObj.toLocaleDateString();
+        }
+
+        if (localProfile && localProfile.updatedAt && localProfile.updatedAt > (fetchedProfile.updatedAt || 0)) {
+            applyProfileToUI(localProfile);
+            return;
+        }
+
+        fetchedProfile.dob = formattedDob;
+        applyProfileToUI(fetchedProfile);
+        saveLocalProfile({
+            userId,
+            username,
+            email,
+            dob: formattedDob,
+            pfp,
+            updatedAt: Date.now()
+        });
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+
+        const localProfile = getLocalProfile();
+        if (localProfile && (localProfile.username || localProfile.email)) {
+            applyProfileToUI(localProfile);
+        }
+    }
+}
+
+async function toggleEditMode() {
+    const editBtn = document.getElementById('editAccountBtn');
+    const inputs = document.querySelectorAll('.profile-input');
+    const displays = [
+        document.getElementById('profileUsername'),
+        document.getElementById('profileEmail'),
+        document.getElementById('profilePasswordMask')
+    ];
+
+    if (!isEditing) {
+        // Enter Edit Mode
+        isEditing = true;
+        editBtn.textContent = 'Save Changes';
+        inputs.forEach(el => el.classList.remove('hidden-input'));
+        displays.forEach(el => el.classList.add('hidden-input'));
+    } else {
+        // Save Changes
+        await saveProfileChanges();
+    }
+}
+
+async function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Preview the image locally for immediate feedback
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('profileAvatar').src = e.target.result;
+        document.getElementById('headerProfilePic').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // Prepare the upload payload
+    const formData = new FormData();
+    formData.append('profile_pic', file);
+
+    const userId = getUserId();
+    try {
+        const token = getUserToken();
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const avatarUrls = [
+            `${API_ENDPOINTS.profile}/${userId}/avatar`,
+            `${API_ENDPOINTS.profile}/avatar/${userId}`,
+            `${API_ENDPOINTS.profile}/avatar`,
+            `${API_BASE_URL}/users/${userId}/avatar`
+        ];
+
+        for (const url of avatarUrls) {
+            try {
+                console.log('Attempting avatar upload to', url);
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers,
+                    body: formData
+                });
+                if (!response) continue;
+                const text = await response.text().catch(() => '');
+                let parsed = null;
+                try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
+                console.log('Avatar upload response from', url, response.status, parsed);
+                if (response.ok) {
+                    const result = parsed;
+                    const userData = Array.isArray(result) ? result[0] : (result && result.items ? result.items[0] : (result && result.data ? result.data : result));
+                    const newPfp = userData && (userData.profile_pic || userData.PROFILE_PIC);
+                    if (newPfp) {
+                        sessionStorage.setItem('userPfp', newPfp);
+                        updateGlobalProfilePics(newPfp);
+                    }
+                    break;
+                } else if (response.status === 404) {
+                    continue;
+                }
+            } catch (err) {
+                console.warn('Avatar upload attempt failed for', url, err);
+                continue;
+            }
+        }
+    } catch (error) {
+        console.error('Error uploading avatar:', error);
+    }
+}
+
+async function saveProfileChanges() {
+    const userId = getUserId();
+    const newUsername = document.getElementById('profileUsernameInput').value;
+    const updatedData = {
+        USER_ID: userId,
+        USERNAME: newUsername,
+        EMAIL: document.getElementById('profileEmailInput').value,
+        username: newUsername,
+        email: document.getElementById('profileEmailInput').value,
+        id: userId
+    };
+
+    // Only send the password if the user actually typed a new one
+    const newPassword = document.getElementById('profilePasswordInput').value;
+    if (newPassword) {
+        updatedData.password = newPassword;
+        updatedData.PASSWORD = newPassword;
+    }
+
+    try {
+        const token = getUserToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const candidateUrls = [
+            `${API_ENDPOINTS.profile}/${userId}`,
+            `${API_ENDPOINTS.profile}/update/${userId}`,
+            `${API_ENDPOINTS.profile}/update`,
+            `${API_ENDPOINTS.profile}`,
+            `${API_BASE_URL}/users/${userId}`,
+            `${API_BASE_URL}/users/update/${userId}`,
+            `${API_BASE_URL}/users/update`,
+            `${API_BASE_URL}/users`
+        ];
+
+        const methods = ['PUT', 'PATCH', 'POST'];
+        let lastErr = null;
+
+        for (const url of candidateUrls) {
+            for (const method of methods) {
+                try {
+                    console.log('Attempting profile save', method, url);
+                    const response = await fetch(url, {
+                        method,
+                        headers,
+                        body: JSON.stringify(updatedData)
+                    });
+
+                    const text = await response.text().catch(() => '');
+                    let parsed = null;
+                    try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
+                    console.log('Profile update response from', url, response.status, parsed);
+
+                    if (response.ok) {
+                        const localProfile = {
+                            userId,
+                            username: newUsername,
+                            email: document.getElementById('profileEmailInput').value,
+                            dob: getLocalProfile().dob || '',
+                            pfp: sessionStorage.getItem('userPfp') || getLocalProfile().pfp || '',
+                            updatedAt: Date.now()
+                        };
+                        saveLocalProfile(localProfile);
+                        applyProfileToUI(localProfile);
+                        sessionStorage.setItem('currentUser', newUsername);
+                        isEditing = false;
+                        document.getElementById('editAccountBtn').textContent = 'Change Account Info';
+                        document.querySelectorAll('.profile-input').forEach(el => el.classList.add('hidden-input'));
+                        document.querySelectorAll('#profileUsername, #profileEmail, #profilePasswordMask').forEach(el => el.classList.remove('hidden-input'));
+                        document.getElementById('profilePasswordInput').value = '';
+                        fetchUserProfile(userId);
+                        return;
+                    } else if (response.status === 404) {
+                        lastErr = `404 at ${url}`;
+                        continue;
+                    } else {
+                        lastErr = `Status ${response.status} at ${url}`;
+                        continue;
+                    }
+                } catch (err) {
+                    console.warn('Attempt to save profile failed for', url, err);
+                    lastErr = err;
+                    continue;
+                }
+            }
+        }
+
+        const localProfile = {
+            userId,
+            username: newUsername,
+            email: document.getElementById('profileEmailInput').value,
+            dob: getLocalProfile().dob || '',
+            pfp: sessionStorage.getItem('userPfp') || getLocalProfile().pfp || '',
+            updatedAt: Date.now()
+        };
+        saveLocalProfile(localProfile);
+        sessionStorage.setItem('currentUser', newUsername);
+        applyProfileToUI(localProfile);
+
+        console.warn('Profile update saved locally because server returned 404. Last error:', lastErr);
+        // Show a brief, visible message to the user so they know the server rejected updates
+        try {
+            let notice = document.getElementById('profileSaveError');
+            if (!notice) {
+                notice = document.createElement('div');
+                notice.id = 'profileSaveError';
+                notice.style.cssText = 'color:#a00;margin-top:10px;font-weight:600;';
+                const container = document.querySelector('.profile-actions') || document.querySelector('.profile-info-section') || document.body;
+                container.appendChild(notice);
+            }
+            notice.textContent = 'Profile update saved locally. Server update is not available.';
+        } catch (e) {
+            // ignore DOM errors
+        }
+        isEditing = false;
+        document.getElementById('editAccountBtn').textContent = 'Change Account Info';
+        document.querySelectorAll('.profile-input').forEach(el => el.classList.add('hidden-input'));
+        document.querySelectorAll('#profileUsername, #profileEmail, #profilePasswordMask').forEach(el => el.classList.remove('hidden-input'));
+        document.getElementById('profilePasswordInput').value = '';
+        return;
+    } catch (error) {
+        console.error('Error saving profile:', error);
+    }
+}

@@ -80,7 +80,7 @@ function renderBoard() {
             cell.className = 'minesweeper-cell';
             cell.dataset.row = row;
             cell.dataset.col = col;
-            
+ 
             cell.addEventListener('click', () => revealCell(row, col, cell));
             cell.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
@@ -202,22 +202,24 @@ function showEndGameModal(won) {
     if (won) {
         quitBtn.textContent = 'Quit and Save Score';
         retryBtn.textContent = 'Try Again and Save Score';
-        quitBtn.onclick = () => {
-            saveScore(true);
+        quitBtn.onclick = async () => {
+            await saveScore(true);
             window.location.href = 'mainpage.html';
         };
-        retryBtn.onclick = () => {
-            saveScore(true);
+        retryBtn.onclick = async () => {
+            await saveScore(true);
             closeEndGameModal();
             resetGame();
         };
     } else {
         quitBtn.textContent = 'Quit';
         retryBtn.textContent = 'Try Again';
-        quitBtn.onclick = () => {
+        quitBtn.onclick = async () => {
+            await saveScore(false); // TEST: Save even on loss to check DB
             window.location.href = 'mainpage.html';
         };
-        retryBtn.onclick = () => {
+        retryBtn.onclick = async () => {
+            await saveScore(false); // TEST: Save even on loss to check DB
             closeEndGameModal();
             resetGame();
         };
@@ -232,12 +234,10 @@ function closeEndGameModal() {
     modal.classList.add('hidden');
 }
 
-function saveScore(won) {
-    // Only save if the game was won
-    if (!won) {
-        console.log('Game lost - score not saved.');
-        return;
-    }
+async function saveScore(won) {
+    // For testing, we are allowing loss saves. 
+    // Remove this check or keep 'won' logic for production.
+    console.log(`Attempting to save score. Won: ${won}`);
 
     const time = parseInt(document.getElementById('timer').textContent, 10) || 0;
     const username = getCurrentUser() || 'Anonymous';
@@ -248,39 +248,70 @@ function saveScore(won) {
     };
 
     // Try to save to API
-    saveScoreToAPI(scoreEntry);
-
-    // Also save to localStorage as fallback
-    const leaderboard = JSON.parse(localStorage.getItem('minesweeperScores') || '[]');
-    leaderboard.push(scoreEntry);
-    localStorage.setItem('minesweeperScores', JSON.stringify(leaderboard));
-
+    await saveScoreToAPI(scoreEntry);
+    
     console.log('Score saved:', scoreEntry);
 }
 
 async function saveScoreToAPI(scoreEntry) {
+    const userId = getUserId();
+    if (!userId) {
+        console.error('Cannot save score: User ID is missing from session. Please log in again.');
+        return;
+    }
+
     try {
         const payload = {
-            user_id: getUserId() || getCurrentUser() || 'Anonymous',
+            USER_ID: userId,
+            USER_NAME: getCurrentUser(),
+            TIME_RESULT: scoreEntry.time,
+            user_id: userId,
+            username: getCurrentUser(),
             time_result: scoreEntry.time
         };
+        console.log('Sending payload to API:', payload);
+        const headers = { 'Content-Type': 'application/json' };
+        const token = getUserToken();
+        if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const response = await fetch(API_ENDPOINTS.saveGame, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getUserToken()}`
-            },
-            body: JSON.stringify(payload)
-        });
+        // Use the canonical leaderboard save endpoint once — the backend expects POST /leaderboard
+        try {
+            console.log('Attempting to save score to', API_ENDPOINTS.saveGame);
+            const response = await fetch(API_ENDPOINTS.saveGame, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
 
-        if (response.status === 201) {
-            console.log('Score saved to API successfully');
-        } else {
-            console.warn('API returned status:', response.status);
+            const text = await response.text().catch(() => '');
+            let parsed = null;
+            try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
+            console.log('Response from', API_ENDPOINTS.saveGame, response.status, parsed);
+
+            if (response.ok) {
+                console.log('Score saved to API successfully via', API_ENDPOINTS.saveGame, parsed);
+                return;
+            } else if (response.status === 404) {
+                    console.error('Leaderboard save endpoint returned 404. Server may not support saving scores. Falling back to local storage.');
+                    // Fallback: save to local leaderboard stored in sessionStorage
+                    try {
+                        const key = 'localLeaderboard';
+                        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                        existing.push({ username: payload.username || payload.USER_NAME || 'Anonymous', time: payload.TIME_RESULT || payload.time_result || 0, date: (new Date()).toISOString() });
+                        localStorage.setItem(key, JSON.stringify(existing));
+                        console.log('Saved score to local leaderboard fallback.');
+                        return;
+                    } catch (e) {
+                        console.error('Failed to save local leaderboard fallback:', e);
+                    }
+            } else {
+                console.error('Leaderboard save failed with status', response.status);
+            }
+        } catch (err) {
+            console.error('Error posting to leaderboard endpoint', err);
         }
     } catch (err) {
-        console.warn('Could not save score to API, using localStorage only:', err);
+        console.error('Could not save score to API:', err);
     }
 }
 

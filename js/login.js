@@ -1,7 +1,8 @@
-function setCurrentUser(username, token, userId) {
+function setCurrentUser(username, token, userId, profilePic) {
     sessionStorage.setItem('currentUser', username);
     sessionStorage.setItem('userToken', token);
     sessionStorage.setItem('userId', userId);
+    sessionStorage.setItem('userPfp', profilePic || '');
 }
 
 function showLoginError(message) {
@@ -40,12 +41,26 @@ document.getElementById('loginForm').addEventListener('submit', async function (
         });
 
         if (response.status === 200) {
-            const userData = await response.json();
+            const result = await response.json();
+            
+            // Unwrap Oracle/ORDS response if necessary
+            const userData = Array.isArray(result) ? result[0] : (result.items ? result.items[0] : (result.data || result.user || result));
+            console.log("Login success. Extracted user data:", userData);
+            
+            // More resilient ID and PFP mapping
+            const userId = userData.id || userData.user_id || userData.USER_ID || userData.ID || userData.PK_USER_ID || userData.USERID || '';
+            const profilePic = userData.profile_pic || userData.PROFILE_PIC || '';
+
+            if (!userId) {
+                console.error("Critical Error: No User ID found in login response. Keys present:", Object.keys(userData));
+            }
+
             // Successful login - store user in session
             setCurrentUser(
                 userData.username || username,
                 userData.token || '',
-                userData.id || userData.user_id || ''
+                userId,
+                profilePic
             );
             window.location.href = 'mainpage.html';
         } else if (response.status === 401) {
