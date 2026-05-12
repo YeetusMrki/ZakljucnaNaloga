@@ -5,7 +5,7 @@ requireAuth();
 
 async function fetchLeaderboardFromAPI() {
     try {
-        const response = await fetch(`${API_ENDPOINTS.leaderboard}`, {
+        const response = await fetch(API_ENDPOINTS.leaderboard, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
