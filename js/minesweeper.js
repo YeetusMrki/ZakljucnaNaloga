@@ -1,7 +1,5 @@
 /* poveži s sejo uporabnika in zapisi rezultate na bazo. */
 /* Konfiguracija igre */
-
-// Require user to be authenticated
 requireAuth();
 
 const BOARD_WIDTH = 30;
@@ -215,11 +213,9 @@ function showEndGameModal(won) {
         quitBtn.textContent = 'Quit';
         retryBtn.textContent = 'Try Again';
         quitBtn.onclick = async () => {
-            await saveScore(false); // TEST: Save even on loss to check DB
             window.location.href = 'mainpage.html';
         };
         retryBtn.onclick = async () => {
-            await saveScore(false); // TEST: Save even on loss to check DB
             closeEndGameModal();
             resetGame();
         };
