@@ -21,19 +21,44 @@
             <div id="background-animation" class="background-animation"></div>
             <div class="content-wrapper">
                 <div id="leaderboard-section" class="content-section leaderboard-section">
-                    <h2>Leaderboard</h2>
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Player</th>
-                                <th>Time (s)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboardBody">
-                            <!-- dynamic rows inserted by JS -->
-                        </tbody>
-                    </table>
+                    <div class="leaderboard-search-bar">
+                        <div class="leaderboard-search">
+                            <input id="playerSearchInput" type="text" placeholder="Enter username to search" />
+                            <button id="playerSearchBtn" type="button">Search</button>
+                        </div>
+                    </div>
+
+                    <div class="leaderboard-group global-leaderboard">
+                        <h2>Global Leaderboard</h2>
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Player</th>
+                                    <th>Time (s)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody">
+                                <!-- dynamic rows inserted by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="leaderboard-group player-scores">
+                        <h2>Player Scores</h2>
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Player</th>
+                                    <th>Time (s)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="searchResultsBody">
+                                <tr><td colspan="3">Your scores will appear here by default.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div id="play-section" class="content-section play-section">
                     <h2>Ready to Play?</h2>
