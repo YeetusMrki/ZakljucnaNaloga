@@ -1,3 +1,4 @@
+//Nastavitve API: osnovni URL in končne točke
 const API_BASE_URL = 'https://doscord.top/mrki';
 const API_ENDPOINTS = {
     signup: `${API_BASE_URL}/signup`,
@@ -7,6 +8,7 @@ const API_ENDPOINTS = {
     saveGame: `${API_BASE_URL}/saveGame`
 };
 
+//Globalna konfiguracija aplikacije
 const CONFIG = {
     DEFAULT_PFP: 'photos/default_pfp.png'
 };

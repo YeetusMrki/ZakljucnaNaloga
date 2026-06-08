@@ -1,3 +1,4 @@
+//Upravljanje uporabniškega profila: pridobivanje, prikaz in urejanje
 let isEditing = false;
 
 function getLocalProfile() {
@@ -52,7 +53,7 @@ function setupProfileListeners() {
 
 async function fetchUserProfile(userId) {
     try {
-        // Try a few common variants of the profile GET endpoint
+        //Poskusi nekaj pogostih različic GET endpointa za profil
         const token = getUserToken();
         const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -91,7 +92,7 @@ async function fetchUserProfile(userId) {
             }
         }
 
-        // If the API returns a list (common in Oracle ORDS), take the first item
+        //Če API vrne seznam (pogosto v Oracle ORDS), vzemi prvi element
         let userData = Array.isArray(result) ? result[0] : (result.items ? result.items[0] : (result.data || result));
         
         console.log("Extracted User Object:");
@@ -99,7 +100,7 @@ async function fetchUserProfile(userId) {
 
         if (!userData) throw new Error("User data not found in response");
         
-        // Robust field mapping for Oracle/REST variations
+        //Robustno preslikavanje polj za Oracle/REST različice
         const username = userData.username || userData.USERNAME || userData.USER_NAME || userData.USER_ID || userData.ID || '';
         const email = userData.email || userData.EMAIL || userData.user_email || userData.USER_EMAIL || userData.MAIL || userData.E_MAIL || userData.POSTA || '';
         const dobRaw = userData.dob || userData.DOB || userData.birthDate || userData.BIRTHDATE || userData.birth_date || userData.BIRTH_DATE || userData.DATUM_ROJSTVA || userData.BIRTH_DAY || '';
@@ -113,7 +114,7 @@ async function fetchUserProfile(userId) {
             updatedAt: Date.now()
         };
 
-        // Handle Date formatting safely
+        //Varno obravnava formatiranja datuma
         let formattedDob = '-';
         if (dobRaw) {
             const dateObj = new Date(dobRaw);
@@ -155,13 +156,13 @@ async function toggleEditMode() {
     ];
 
     if (!isEditing) {
-        // Enter Edit Mode
+        //Vstopi v način urejanja
         isEditing = true;
         editBtn.textContent = 'Save Changes';
         inputs.forEach(el => el.classList.remove('hidden-input'));
         displays.forEach(el => el.classList.add('hidden-input'));
     } else {
-        // Save Changes
+        //Shrani spremembe
         await saveProfileChanges();
     }
 }
@@ -170,7 +171,7 @@ async function handleAvatarUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Preview the image locally for immediate feedback
+    //Predogled slike lokalno za takojšen odziv
     const reader = new FileReader();
     reader.onload = (e) => {
         document.getElementById('profileAvatar').src = e.target.result;
@@ -178,7 +179,7 @@ async function handleAvatarUpload(event) {
     };
     reader.readAsDataURL(file);
 
-    // Prepare the upload payload
+    //Pripravi podatke za nalaganje
     const formData = new FormData();
     formData.append('profile_pic', file);
 
@@ -242,7 +243,7 @@ async function saveProfileChanges() {
         id: userId
     };
 
-    // Only send the password if the user actually typed a new one
+    //Pošlji geslo le, če je uporabnik vnesel novo
     const newPassword = document.getElementById('profilePasswordInput').value;
     if (newPassword) {
         updatedData.password = newPassword;
@@ -330,7 +331,7 @@ async function saveProfileChanges() {
         applyProfileToUI(localProfile);
 
         console.warn('Profile update saved locally because server returned 404. Last error:', lastErr);
-        // Show a brief, visible message to the user so they know the server rejected updates
+        //Prikaži kratko, vidno sporočilo uporabniku, da ve, da je strežnik zavrnil posodobitve
         try {
             let notice = document.getElementById('profileSaveError');
             if (!notice) {
@@ -342,7 +343,7 @@ async function saveProfileChanges() {
             }
             notice.textContent = 'Profile update saved locally. Server update is not available.';
         } catch (e) {
-            // ignore DOM errors
+            //Ignoriraj DOM napake
         }
         isEditing = false;
         document.getElementById('editAccountBtn').textContent = 'Change Account Info';

@@ -1,3 +1,4 @@
+//Shrani podatke trenutnega uporabnika v sessionStorage
 function setCurrentUser(username, token, userId, profilePic) {
     sessionStorage.setItem('currentUser', username);
     sessionStorage.setItem('userToken', token);
@@ -5,18 +6,21 @@ function setCurrentUser(username, token, userId, profilePic) {
     sessionStorage.setItem('userPfp', profilePic || '');
 }
 
+//Prikaže napako pri prijavi uporabniku
 function showLoginError(message) {
     const errorBox = document.getElementById('loginError');
     errorBox.textContent = message;
     errorBox.style.display = 'block';
 }
 
+//Počisti prikaz napake pri prijavi
 function clearLoginError() {
     const errorBox = document.getElementById('loginError');
     errorBox.style.display = 'none';
     errorBox.textContent = '';
 }
 
+//Obdelava obrazca za prijavo: pošlji podatke na API in obdelaj odgovor
 document.getElementById('loginForm').addEventListener('submit', async function (event) {
     event.preventDefault();
     clearLoginError();
@@ -30,7 +34,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     }
 
     try {
-        // Call API to validate login credentials
+        //Pokliče API za prijavo
         const response = await fetch(API_ENDPOINTS.login, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -43,11 +47,9 @@ document.getElementById('loginForm').addEventListener('submit', async function (
         if (response.status === 200) {
             const result = await response.json();
             
-            // Unwrap Oracle/ORDS response if necessary
             const userData = Array.isArray(result) ? result[0] : (result.items ? result.items[0] : (result.data || result.user || result));
             console.log("Login success. Extracted user data:", userData);
             
-            // More resilient ID and PFP mapping
             const userId = userData.id || userData.user_id || userData.USER_ID || userData.ID || userData.PK_USER_ID || userData.USERID || '';
             const profilePic = userData.profile_pic || userData.PROFILE_PIC || '';
 
@@ -55,7 +57,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
                 console.error("Critical Error: No User ID found in login response. Keys present:", Object.keys(userData));
             }
 
-            // Successful login - store user in session
+            //Prijava uspešna, shrani podatke uporabnika v sejo
             setCurrentUser(
                 userData.username || username,
                 userData.token || '',

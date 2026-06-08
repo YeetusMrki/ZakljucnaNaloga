@@ -1,12 +1,14 @@
+//Obdelava strani za registracijo
 const errorBox = document.getElementById('signupError');
 const signUpForm = document.getElementById('signupForm');
+
 signUpForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const password = document.getElementById('password').value;
     const confPassword = document.getElementById('confirm-password').value;
 
-    // Validate passwords match
+    //Pregledače se, ali se gesli ujemata
     if (password !== confPassword) {
         showSignupError("Passwords do not match.");
         return;
@@ -27,10 +29,10 @@ signUpForm.addEventListener('submit', async (e) => {
         });
 
         if (response.status === 201) {
-            // 1. Show the success message using your function
-            showSignupMessage("Account created successfully! Redirecting...", true);
+            //1.Prikaže sporočilo o uspehu z vašo funkcijo
+                    showSignupMessage("Account created successfully! Redirecting...", true);
 
-            // 2. Wait 1200ms then switch window
+            //2.Počakaj 1200ms, nato preusmeri okno
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 1200);
@@ -46,6 +48,7 @@ signUpForm.addEventListener('submit', async (e) => {
     }
 });
 
+//Prikaže napako pri registraciji
 function showSignupError(message) {
     errorBox.textContent = message;
     errorBox.style.display = 'block';
@@ -54,6 +57,7 @@ function showSignupError(message) {
     errorBox.style.borderColor = '#ff5c5c';
 }
 
+//Prikaže obvestilo o uspehu ali napaki pri registraciji
 function showSignupMessage(message, success = false) {
     errorBox.textContent = message;
     errorBox.style.display = 'block';
@@ -68,6 +72,7 @@ function showSignupMessage(message, success = false) {
     }
 }
 
+//Počisti polje z napako/obvestilom pri registraciji
 function clearSignupError() {
     errorBox.style.display = 'none';
     errorBox.textContent = '';

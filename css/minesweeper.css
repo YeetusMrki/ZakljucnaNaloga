@@ -115,7 +115,7 @@
     background: linear-gradient(135deg, #505050 0%, #606060 100%);
 }
 
-/* Responsive adjustments */
+/* Prilagoditve za odzivnost */
 @media (max-width: 768px) {
     .minesweeper-board {
         grid-template-columns: repeat(20, 15px);

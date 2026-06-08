@@ -1,3 +1,4 @@
+//Glavna logika igre Minesweeper: ustvarjanje, upravljanje in shranjevanje rezultatov
 /* poveži s sejo uporabnika in zapisi rezultate na bazo. */
 /* Konfiguracija igre */
 requireAuth();
@@ -93,7 +94,7 @@ function renderBoard() {
 function revealCell(row, col, cellElement) {
     if (!gameActive) return;
 
-    // Handle chord action if clicking on a revealed number
+    //Obravnava akcije 'chord' pri kliku na razkrito številko
     if (revealed[row][col] && gameBoard[row][col] > 0) {
         handleChord(row, col);
         return;
@@ -141,7 +142,7 @@ function handleChord(row, col) {
     let flagCount = 0;
     let adjacentCells = [];
 
-    // Count flags around this number and collect adjacent cell info
+    //Prešteje zastavice okoli te številke in zbere podatke o sosednjih celicah
     for (let r = row - 1; r <= row + 1; r++) {
         for (let c = col - 1; c <= col + 1; c++) {
             if (r >= 0 && r < BOARD_HEIGHT && c >= 0 && c < BOARD_WIDTH && !(r === row && c === col)) {
@@ -155,22 +156,22 @@ function handleChord(row, col) {
         }
     }
 
-    // Check if flag count matches the number
+    //Preveri ali se število zastavic ujema s številko
     if (flagCount !== gameBoard[row][col]) return;
 
-    // Verify all flagged cells are actually mines, if not end game (lose)
+    //Preveri ali so vse označene celice res mine, v nasprotnem primeru konec igre (poraz)
     for (let r = row - 1; r <= row + 1; r++) {
         for (let c = col - 1; c <= col + 1; c++) {
             if (r >= 0 && r < BOARD_HEIGHT && c >= 0 && c < BOARD_WIDTH && flags[r][c]) {
                 if (gameBoard[r][c] !== 'M') {
-                    endGame(false); // Wrong flag, lose
+                    endGame(false); //Napačna zastavica, izgubi
                     return;
                 }
             }
         }
     }
 
-    // Reveal all unrevealed non-flagged cells around this number
+    //Razkrije vse nerazkrite neoznačene celice okoli te številke
     for (let cell of adjacentCells) {
         if (!cell.isFlagged && !revealed[cell.row][cell.col]) {
             const cellElement = document.querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`);
@@ -231,8 +232,8 @@ function closeEndGameModal() {
 }
 
 async function saveScore(won) {
-    // For testing, we are allowing loss saves. 
-    // Remove this check or keep 'won' logic for production.
+    //Za testiranje dovolimo shranjevanje tudi porazov.
+    //Odstranite to preverjanje ali obdržite logiko 'won' za produkcijo.
     console.log(`Attempting to save score. Won: ${won}`);
 
     const time = parseInt(document.getElementById('timer').textContent, 10) || 0;
@@ -243,7 +244,7 @@ async function saveScore(won) {
         date: new Date().toISOString()
     };
 
-    // Try to save to API
+    //Poskusi shraniti v API
     await saveScoreToAPI(scoreEntry);
     
     console.log('Score saved:', scoreEntry);
@@ -270,7 +271,7 @@ async function saveScoreToAPI(scoreEntry) {
         const token = getUserToken();
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        // Use the canonical leaderboard save endpoint once — the backend expects POST /leaderboard
+        //Uporabi uradni endpoint za shranjevanje lestvice — backend pričakuje POST /leaderboard
         try {
             console.log('Attempting to save score to', API_ENDPOINTS.saveGame);
             const response = await fetch(API_ENDPOINTS.saveGame, {
@@ -289,7 +290,7 @@ async function saveScoreToAPI(scoreEntry) {
                 return;
             } else if (response.status === 404) {
                     console.error('Leaderboard save endpoint returned 404. Server may not support saving scores. Falling back to local storage.');
-                    // Fallback: save to local leaderboard stored in sessionStorage
+                    //Rezervno: shrani v lokalno lestvico v sessionStorage
                     try {
                         const key = 'localLeaderboard';
                         const existing = JSON.parse(localStorage.getItem(key) || '[]');

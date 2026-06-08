@@ -1,10 +1,13 @@
+//Inicializacija glavne strani po nalaganju DOM
 document.addEventListener('DOMContentLoaded', () => {
     setupSearch();
     loadLeaderboard();
 });
 
+//Shranjuje vse vnose lestvice (API + lokalno)
 let allLeaderboardEntries = [];
 
+//Pridobi lokalno shranjene vnose lestvice iz localStorage
 function getLocalLeaderboard() {
     try {
         return JSON.parse(localStorage.getItem('localLeaderboard') || '[]');
@@ -13,6 +16,7 @@ function getLocalLeaderboard() {
     }
 }
 
+//Normalizira strukturo vnosa lestvice, sprejme različne oblike
 function normalizeLeaderboardEntry(entry) {
     return {
         username: entry.username || entry.USERNAME || entry.USER_NAME || entry.user_id || entry.USER_ID || entry.PLAYER || 'Anonymous',
@@ -21,6 +25,7 @@ function normalizeLeaderboardEntry(entry) {
     };
 }
 
+//Izvleče tabelo/vnosi iz API odgovora v pričakovani obliki
 function extractLeaderboardData(result) {
     const data = Array.isArray(result)
         ? result
@@ -28,6 +33,7 @@ function extractLeaderboardData(result) {
     return Array.isArray(data) ? data.map(normalizeLeaderboardEntry) : [];
 }
 
+//Upodobi HTML tabelo lestvice v dani tbody
 function renderLeaderboardTable(tbodyId, entries, options = {}) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
@@ -49,6 +55,7 @@ function renderLeaderboardTable(tbodyId, entries, options = {}) {
     });
 }
 
+//Upodobi globalno lestvico
 function renderGlobalLeaderboard() {
     renderLeaderboardTable('leaderboardBody', allLeaderboardEntries, {
         colspan: 3,
@@ -56,6 +63,7 @@ function renderGlobalLeaderboard() {
     });
 }
 
+//Prikaže rezultate za iskanje igralca ali trenutnega uporabnika
 function renderPlayerOrSearchResults(query) {
     const normalizedQuery = (query || '').trim().toLowerCase();
     const currentUsername = getCurrentUser();
@@ -93,6 +101,7 @@ function renderPlayerOrSearchResults(query) {
     });
 }
 
+//Izvede iskanje rezultatov za določenega uporabnika prek API
 async function renderSearchResults(username) {
 
     if (!username.trim()) {
@@ -126,6 +135,7 @@ async function renderSearchResults(username) {
     }
 }
 
+//Nastavi dogodke za iskalno polje in gumb
 function setupSearch() {
     const input = document.getElementById('playerSearchInput');
     const button = document.getElementById('playerSearchBtn');
@@ -145,6 +155,7 @@ function setupSearch() {
     }
 }
 
+//Naloži lestvico iz API ter združi z lokalnimi vnosi
 async function loadLeaderboard() {
     try {
         const headers = {};
